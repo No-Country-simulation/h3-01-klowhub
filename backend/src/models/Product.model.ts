@@ -1,5 +1,5 @@
 import { Model } from "sequelize";
-import { Platform, Sector, Tag } from "../interfaces/product.interface";
+import { Platform, Sector, Tag } from "./enum/enum";
 
 export abstract class ProductModel extends Model {
   public id!: string;

@@ -1,8 +1,7 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../config/database';
 import { ProductModel } from './Product.model';
-import { Competence } from '../interfaces/course.interface';
-import { Platform, Sector, Tag } from '../interfaces/product.interface';
+import { Competence, Platform, Sector, Tag } from './enum/enum';
 
 function generateShortID(): string {
   return (
@@ -61,7 +60,7 @@ CourseModel.init(
       },
     },
     tags: {
-      type: DataTypes.STRING,
+      type: DataTypes.ARRAY(DataTypes.STRING),
       allowNull: true,
       validate: {
         isIn: [Object.values(Tag)],

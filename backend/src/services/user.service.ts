@@ -18,8 +18,8 @@ export const findUserDTOByPk = async (id: string): Promise<UserDTO | null> => {
     return {
       longName: user.longName,
       email: user.email,
-      country: user.country,
-      imageProfile: user.imageProfile ? user.imageProfile.toString("base64") : undefined,
+      /* country: user.country,
+      imageProfile: user.imageProfile ? user.imageProfile.toString("base64") : undefined, */
     };
   } catch (error: any) {
     if (error.name === "SequelizeConnectionError") {
@@ -50,10 +50,10 @@ export const updateUserById = async (
     if (password) {
       validatePassword(password);
       user.password = await encryptPassword(password);
-    }
+    }/* 
     if (updateData.imageProfile) {
       user.imageProfile = Buffer.from(updateData.imageProfile.split(",")[1], "base64");
-    }
+    } */
 
     Object.assign(user, updateData);
     await user.save({ transaction });

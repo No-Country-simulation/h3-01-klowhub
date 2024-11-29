@@ -1,9 +1,5 @@
-import { Platform, Sector, Tag } from "./product.interface";
+import { Platform, Sector, Tag } from "../models/enum/enum";
 
-export enum Competence {
-  BASIC = 'Basic',
-  INTERMEDIATE = 'Intermediate',
-}
 export interface LessonData {
     title: string;
     detail: string;
