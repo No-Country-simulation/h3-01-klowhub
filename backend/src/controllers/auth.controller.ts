@@ -22,7 +22,8 @@ export const register = async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     if (res.headersSent) {
-      return; // Si los encabezados ya se enviaron, no hacer nada más
+      console.error("Error en getUserMembership: ", MESSAGES.HEADERS_SENT);
+      return;
     }
     if (error.message === 'Este email ya está registrado') {
       res.status(400).json({ message: error.message });
@@ -52,7 +53,8 @@ export const login = async (req: Request, res: Response) => {
     res.json({ user, token });
   } catch (error: any) {
     if (res.headersSent) {
-      return; // Si los encabezados ya se enviaron, no hacer nada más
+      console.error("Error en getUserMembership: ", MESSAGES.HEADERS_SENT);
+      return;
     }
     
     // Manejo de errores
@@ -87,7 +89,8 @@ export const logout = async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     if (res.headersSent) {
-      return; // Si los encabezados ya se enviaron, no hacer nada más
+      console.error("Error en getUserMembership: ", MESSAGES.HEADERS_SENT);
+      return;
     }
     res.status(500).json({ message: error.message || MESSAGES.LOGOUT_ERROR });
   }

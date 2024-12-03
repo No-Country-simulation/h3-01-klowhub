@@ -1,12 +1,6 @@
 import { DataTypes, Model } from "sequelize";
 import sequelize from "../config/database";
-
-function generateShortID(): string {
-  return (
-    Date.now().toString(36).substring(0, 6) +
-    Math.random().toString(36).substring(2, 6)
-  ).substring(0, 10);
-}
+import { generateShortID } from "../utils/generateShortID";
 
 class CourseModuleModel extends Model {
   public id!: string;

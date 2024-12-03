@@ -1,10 +1,10 @@
 import { Transaction } from "sequelize";
 import sequelize from "../config/database";
 import { CourseModel, CourseModuleModel, LessonModel } from "../models/";
-import { CourseData } from "../interfaces/course.interface";
 import { MESSAGES } from "../utils/messages";
+import { CourseDTO } from "../dtos/course.dto";
 
-const saveCourse = async (courseData: CourseData) => {
+const saveCourse = async (courseData: CourseDTO) => {
   const transaction: Transaction = await sequelize.transaction();
 
   try {

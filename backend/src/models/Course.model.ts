@@ -2,13 +2,7 @@ import { DataTypes } from 'sequelize';
 import sequelize from '../config/database';
 import { ProductModel } from './Product.model';
 import { Competence, Platform, Sector, Tag } from './enum/enum';
-
-function generateShortID(): string {
-  return (
-    Date.now().toString(36).substring(0, 6) +
-    Math.random().toString(36).substring(2, 6)
-  ).substring(0, 10);
-}
+import { generateShortID } from '../utils/generateShortID';
 
 class CourseModel extends ProductModel {
   public competence!: Competence;

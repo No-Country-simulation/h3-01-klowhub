@@ -1,6 +1,5 @@
 import { body, param, ValidationChain } from 'express-validator';
-import { Platform, Sector, Tag } from '../models/enum/enum';
-import { Competence } from '../interfaces/course.interface';
+import { Competence, Platform, Sector, Tag } from '../models/enum/enum';
 
 // Validadores para el curso principal
 export const validateCourseRegister: ValidationChain[] = [
