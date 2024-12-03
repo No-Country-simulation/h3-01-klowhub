@@ -85,4 +85,7 @@ const findCourse = async (courseId: string) => {
   }
 };
 
+// Crear lógica de GetAll, delete...
+
 export default { saveCourse, findCourse };
+

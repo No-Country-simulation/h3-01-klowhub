@@ -12,6 +12,7 @@ class UserModel extends Model {
   public membership!: Membership | null
   public isValid!: boolean;
   public isVendor!: boolean // por defecto es false hasta que se registra como vendedor
+  public googleId!: string
 }
 
 UserModel.init(
@@ -32,7 +33,7 @@ UserModel.init(
     },
     password: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     role: {
       type: DataTypes.STRING,
@@ -52,6 +53,11 @@ UserModel.init(
       defaultValue: true,
       field: "is_valid",
     },
+    googleId: {
+      type: DataTypes.STRING,
+      allowNull: true, // Permitimos que sea nulo para usuarios registrados con email/password
+      unique: true,
+    },    
     isVendor: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,

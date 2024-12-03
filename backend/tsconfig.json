@@ -6,8 +6,11 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "typeRoots": ["./node_modules/@types", "./src/types"],
+    "types": ["node", "express-session"]
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules"]
+  
 }
