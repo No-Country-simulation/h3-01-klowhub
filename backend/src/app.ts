@@ -3,6 +3,7 @@ import configurePassport from './config/passport';
 import cors from 'cors'
 import passport from 'passport';
 import routes from './routes';
+import path from 'path';
 
 const app = express();
 
@@ -17,5 +18,6 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api', routes);
+app.use('/static/images', express.static(path.join(__dirname, '..', 'public', 'images')));
 
 export default app;

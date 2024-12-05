@@ -1,20 +1,13 @@
 import { Model, DataTypes } from "sequelize";
 import sequelize from "../config/database";
-import { Membership, PaymentMethod, Sector, Tool } from "./enum/enum";
-
-function generateShortID(): string {
-  return (
-    Date.now().toString(36).substring(0, 6) +
-    Math.random().toString(36).substring(2, 6)
-  ).substring(0, 10);
-}
+import { PaymentMethod, Sector, Tool } from "./enum/enum";
+import { generateShortID } from "../utils/generateShortID";
 
 class UserProModel extends Model {
   public id!: string;
   public firstName!: string;
   public lastName!: string;
-  public password!: string;
-  public description!: string;
+  public about!: string;
   public country!: string;
   public sector!: Sector[];
   public sectorsExperience!: string;
@@ -22,13 +15,12 @@ class UserProModel extends Model {
   public toolsExperience!: string;
   public portfolioLink!: string;
   public academicFormation!: string;
-  public certificactionLink!: string;
-  public certificationFile!: string[];
-  public PaymentMethod!: PaymentMethod;
+  public certificationLink!: string;
+  public paymentMethod!: PaymentMethod;
   public accountData!: string;
-  public imageProfile!: Buffer | null; // esto es la imagen BLOB para la db
-  public membership!: Membership;
-  public isValid!: boolean;
+  public imageProfile!: string;
+  public isValid!: boolean; // perfil activo/inactivo
+  public userId!: string; // id de su perfil de usuario básico (User.model.ts)
 }
 
 UserProModel.init(
@@ -48,11 +40,7 @@ UserProModel.init(
       allowNull: false,
       field: "last_name",
     },
-    password: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    description: {
+    about: {
       type: DataTypes.TEXT,
       allowNull: true,
     },
@@ -63,9 +51,6 @@ UserProModel.init(
     sector: {
       type: DataTypes.ARRAY(DataTypes.STRING),
       allowNull: false,
-      validate: {
-        isIn: [Object.values(Sector)],
-      },
     },
     sectorsExperience: {
       type: DataTypes.TEXT,
@@ -75,9 +60,6 @@ UserProModel.init(
     tools: {
       type: DataTypes.ARRAY(DataTypes.STRING),
       allowNull: false,
-      validate: {
-        isIn: [Object.values(Tool)],
-      },
     },
     toolsExperience: {
       type: DataTypes.TEXT,
@@ -94,45 +76,41 @@ UserProModel.init(
       allowNull: true,
       field: "academic_formation",
     },
-    certificactionLink: {
+    certificationLink: {
       type: DataTypes.STRING,
       allowNull: true,
       field: "certification_link",
-    },
-    certificationFile: {
-      type: DataTypes.ARRAY(DataTypes.STRING),
-      allowNull: true,
-      field: "certification_file",
     },
     paymentMethod: {
       type: DataTypes.STRING,
       allowNull: false,
       field: "payment_method",
-      validate: {
-        isIn: [Object.values(PaymentMethod)],
-      },
     },
     accountData: {
-      type: DataTypes.TEXT,
+      type: DataTypes.STRING,
       allowNull: false,
       field: "account_data",
     },
     imageProfile: {
-      type: DataTypes.BLOB,
+      type: DataTypes.STRING,
       allowNull: true,
       field: "image_profile",
-    },
-    membership: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      validate: {
-        isIn: [Object.values(Membership)],
-      },
     },
     isValid: {
       type: DataTypes.BOOLEAN,
       defaultValue: true,
       field: "is_valid",
+    },
+    userId: {
+      type: DataTypes.STRING(10),
+      allowNull: false,
+      field: "user_id",
+      references: {
+        model: "users",
+        key: "id",
+      },
+      onUpdate: "CASCADE",
+      onDelete: "CASCADE",
     },
   },
   {

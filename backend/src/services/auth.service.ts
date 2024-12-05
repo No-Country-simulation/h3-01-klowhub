@@ -1,33 +1,49 @@
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import UserModel from '../models/User.model';
-import DeviceSession from '../models/DeviceSession.model';
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import UserModel from "../models/User.model";
+import DeviceSession from "../models/DeviceSession.model";
+import { UserDTO } from "../dtos/user.dto";
+import { MESSAGES } from "../utils/messages";
 
 export const registerUser = async (
-  longName: string,
-  email: string,
-  password: string
-) => {
+  userData: UserDTO, imageProfile: string
+): Promise<UserDTO | null> => {
   try {
+    const email = userData.email;
     const existingUser = await UserModel.findOne({ where: { email } });
     if (existingUser) {
-      throw new Error('Este email ya está registrado');
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const newUser = await UserModel.create({
-      longName,
-      email,
-      password: hashedPassword,
-    });
-
-    return newUser;
-  } catch (error: any) {
-    if (error.message === 'Este email ya está registrado') {
+      const error: any = new Error(MESSAGES.EMAIL_ALREADY);
+      error.statusCode = 400;
       throw error;
     }
-    throw new Error('Error al crear el usuario');
+
+    if (!userData.password) {
+      const error: any = new Error(MESSAGES.EMAIL_ALREADY);
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const hashedPassword = await bcrypt.hash(userData.password, 10);
+
+    const newUser = await UserModel.create({
+      longName: userData.longName,
+      email: userData.email,
+      password: hashedPassword,
+      imageProfile: imageProfile,
+    });
+
+    if (!newUser) {
+      const error: any = new Error(MESSAGES.USER_CREATE_ERROR);
+      error.statusCode = 500;
+      throw error;
+    }
+
+    return newUser ? (newUser.toJSON() as UserDTO) : null;
+  } catch (error: any) {
+    if (error.name === "SequelizeConnectionError") {
+      throw new Error(MESSAGES.CONNECTION_ERROR);
+    }
+    throw error;
   }
 };
 
@@ -42,21 +58,23 @@ export const loginUser = async (
 ) => {
   try {
     const userData = await UserModel.findOne({ where: { email } });
-    
+
     // Verificar si el usuario existe y está activo
     if (!userData) {
-      throw new Error('Cuenta no encontrada');
+      throw new Error("Cuenta no encontrada");
     }
     if (!userData.isValid) {
-      throw new Error('Cuenta desactivada');
+      throw new Error("Cuenta desactivada");
     }
 
     const isPasswordValid = await bcrypt.compare(password, userData.password);
     if (!isPasswordValid) {
-      throw new Error('Credenciales de acceso inválidas');
+      throw new Error("Credenciales de acceso inválidas");
     }
 
-    const token = jwt.sign({ id: userData.id }, process.env.JWT_SECRET!, { expiresIn: '1d' });
+    const token = jwt.sign({ id: userData.id }, process.env.JWT_SECRET!, {
+      expiresIn: "1d",
+    });
 
     // Solo crea o actualiza la sesión si se proporcionan datos de dispositivo y aplicación
     if (device && app && country) {
@@ -75,32 +93,38 @@ export const loginUser = async (
 
     return { user: userWithoutPassword, token };
   } catch (error: any) {
-    throw new Error(error.message || 'Error en el login');
+    throw new Error(error.message || "Error en el login");
   }
 };
 
-export const logoutUser = async (device: string, app: string, token: string) => {
+export const logoutUser = async (
+  device: string,
+  app: string,
+  token: string
+) => {
   try {
     const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
 
     if (!decoded.id) {
-      throw new Error('El token proveído es inválido');
+      throw new Error("El token proveído es inválido");
     }
 
     if (device && app && decoded.id) {
       // Buscar la sesión activa del usuario
-      const session = await DeviceSession.findOne({ where: { userId: decoded.id, device, app } });
-      
+      const session = await DeviceSession.findOne({
+        where: { userId: decoded.id, device, app },
+      });
+
       if (session) {
         // Desactivar la sesión
         await session.update({ isActive: false });
       } else {
-        throw new Error('No se encuentra la sesión');
+        throw new Error("No se encuentra la sesión");
       }
     }
 
-    return { message: 'Se ha cerrado su sesión con éxito' };
+    return { message: "Se ha cerrado su sesión con éxito" };
   } catch (error: any) {
-    throw new Error('Error cerrando sesión');
+    throw new Error("Error cerrando sesión");
   }
 };

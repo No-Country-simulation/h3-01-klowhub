@@ -4,7 +4,7 @@ import { Platform, Sector, Tag } from "./enum/enum";
 export abstract class ProductModel extends Model {
   public id!: string;
   public title!: string;
-  public detail!: string;
+  public description!: string;
   public platform!: Platform;
   public imageMain!: string // esta es la imagen de perfil de la app o curso
   public sector!: Sector

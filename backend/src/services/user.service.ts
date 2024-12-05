@@ -1,26 +1,29 @@
-import { UserModel } from "../models";
+import { UserModel, UserProModel } from "../models";
 import { UserDTO } from "../dtos/user.dto";
 import { MESSAGES } from "../utils/messages";
-import bcrypt from "bcryptjs";
 import sequelize from "../config/database";
+import { encryptPassword, validatePassword } from "../utils/passwords";
+import { Membership } from "../models/enum/enum";
+import { Transaction } from "sequelize";
 
 export const findUserDTOByPk = async (id: string): Promise<UserDTO | null> => {
   try {
     const user = await UserModel.findOne({
-      where: { id, isValid: true }  // filtra los usuarios activos solamente
+      where: { id, isValid: true }, // filtra los usuarios activos solamente
     });
 
     if (!user) {
       throw new Error(MESSAGES.USER_NOT_FOUND);
     }
 
-    // Construir DTO
-    return {
+    const userDTO: UserDTO = {
       longName: user.longName,
       email: user.email,
-      /* country: user.country,
-      imageProfile: user.imageProfile ? user.imageProfile.toString("base64") : undefined, */
+      about: user.about,
+      imageProfile: user.imageProfile,
     };
+
+    return userDTO;
   } catch (error: any) {
     if (error.name === "SequelizeConnectionError") {
       throw new Error(MESSAGES.CONNECTION_ERROR);
@@ -29,18 +32,55 @@ export const findUserDTOByPk = async (id: string): Promise<UserDTO | null> => {
   }
 };
 
+export const findUserByEmail = async (email: string): Promise<boolean> => {
+  try {
+    const findedProfile = await UserModel.findOne({where: {email}});
+    if (findedProfile) {
+      const error: any = new Error(MESSAGES.EMAIL_ALREADY);
+      error.status = 400;
+      throw error;
+    }
+    return false;
+  } catch (error: any) {
+    if (error.name === "SequelizeConnectionError") {
+      throw new Error(MESSAGES.CONNECTION_ERROR);
+    }
+    throw error;
+  }
+};
+
+export const findMyUser = async (id: string): Promise<UserModel | null> => {
+  try {
+    const findedProfile = await UserModel.findByPk(id);
+    if (!findedProfile) {
+      const error: any = new Error(MESSAGES.USER_NOT_FOUND);
+      error.status = 404;
+      throw error;
+    }
+
+    const { password, ...profileWithoutPassword } = findedProfile.toJSON();
+
+    return profileWithoutPassword;
+  } catch (error: any) {
+    if (error.name === "SequelizeConnectionError") {
+      throw new Error(MESSAGES.CONNECTION_ERROR);
+    }
+    throw error;
+  }
+};
+
 
 export const updateUserById = async (
   id: string,
   updateData: Partial<UserDTO>,
   password?: string
-): Promise<UserModel | null> => {
-  const transaction = await sequelize.transaction();
+): Promise<UserDTO | null> => {
+  const transaction: Transaction = await sequelize.transaction();
 
   try {
     const user = await UserModel.findOne({
-      where: { id, isValid: true },  // Solo buscamos usuarios activos
-      transaction
+      where: { id, isValid: true }, // Solo buscamos usuarios activos
+      transaction,
     });
 
     if (!user) {
@@ -50,16 +90,21 @@ export const updateUserById = async (
     if (password) {
       validatePassword(password);
       user.password = await encryptPassword(password);
-    }/* 
-    if (updateData.imageProfile) {
-      user.imageProfile = Buffer.from(updateData.imageProfile.split(",")[1], "base64");
-    } */
+    }
 
     Object.assign(user, updateData);
     await user.save({ transaction });
 
     await transaction.commit();
-    return user;
+
+    const userDTO: UserDTO = {
+      longName: user.longName,
+      email: user.email,
+      about: user.about,
+      imageProfile: user.imageProfile,
+    };
+
+    return userDTO;
   } catch (error: any) {
     await transaction.rollback();
     if (error.name === "SequelizeConnectionError") {
@@ -69,26 +114,39 @@ export const updateUserById = async (
   }
 };
 
-
-export const deactivateUserByPk = async (id: string): Promise<UserModel | null> => {
+// desactiva tanto el perfil basico como el pro si tuviera
+export const deactivateUserByPk = async (
+  id: string
+): Promise<UserModel | null> => {
+  const transaction: Transaction = await sequelize.transaction();
   try {
-    const user = await UserModel.findByPk(id);
+    const user = await UserModel.findOne({
+      where: { id, isValid: true }, // filtra los usuarios activos solamente
+    });
 
     if (!user) {
       throw new Error(MESSAGES.USER_NOT_FOUND);
     }
 
-    // Verifica si ya esta desactivado
-    if (!user.isValid) {
-      throw new Error('El usuario ya está desactivado');
+    // Busca al usuario pro (si existe)
+    const userPro = await UserProModel.findOne({
+      where: { userId: id, isValid: true }, // filtra los perfiles pro activos
+    });
+
+    if (userPro) {
+      userPro.isValid = false;
+      await userPro.save({ transaction });
     }
 
-    // Actualizar estado del usuario (desactivación lógica)
+    // Desactiva el perfil básico
     user.isValid = false;
-    await user.save();
+    await user.save({ transaction });
 
+    await transaction.commit();
     return user;
   } catch (error: any) {
+    // Revertir la transacción en caso de error
+    await transaction.rollback();
     if (error.name === "SequelizeConnectionError") {
       throw new Error(MESSAGES.CONNECTION_ERROR);
     }
@@ -96,12 +154,74 @@ export const deactivateUserByPk = async (id: string): Promise<UserModel | null> 
   }
 };
 
+export const changeMembership = async (
+  id: string,
+  membership: Membership
+): Promise<UserDTO> => {
+  try {
+    const user = await UserModel.findOne({
+      where: { id, isValid: true }, // filtra los usuarios activos solamente
+    });
 
-const validatePassword = (password: string): void => {
-  if (password.length < 6) {
-    throw new Error("La contraseña debe tener al menos 6 caracteres");
+    if (!user) {
+      throw new Error("El usuario no existe");
+    }
+
+    if (!(Object.values(Membership) as string[]).includes(membership)) {
+      throw new Error("La membresía proporcionada no es válida");
+    }
+
+    if (user.membership === membership) {
+      throw new Error("El usuario ya posee esa membresía");
+    }
+
+    user.membership = membership;
+    await user.save();
+
+    return user as UserDTO;
+  } catch (error: any) {
+    if (error.name === "SequelizeConnectionError") {
+      throw new Error(MESSAGES.CONNECTION_ERROR);
+    }
+    throw new Error(
+      error.message || "Error al cambiar la membresía del usuario"
+    );
   }
 };
-const encryptPassword = async (password: string): Promise<string> => {
-  return bcrypt.hash(password, 10);
+
+export const getUserMembership = async (
+  id: string
+): Promise<Membership | null> => {
+  try {
+    if (!id) {
+      const error: any = new Error(MESSAGES.MISSED_DATA);
+      error.status = 400; // Código de estado para datos faltantes
+      throw error;
+    }
+
+    const user = await UserModel.findOne({
+      where: { id, isValid: true },
+    });
+
+    if (!user) {
+      const error: any = new Error(MESSAGES.USER_NOT_FOUND);
+      error.status = 404; // Código de estado para "no encontrado"
+      throw error;
+    }
+
+    if (!user.membership) {
+      null; // El usuario no tiene membresía asignada
+    }
+
+    return user.membership as Membership;
+  } catch (error: any) {
+    if (error.name === "SequelizeConnectionError") {
+      const dbError: any = new Error(MESSAGES.CONNECTION_ERROR);
+      dbError.status = 500; // Error de conexión
+      throw dbError;
+    }
+    const generalError: any = new Error(error.message || MESSAGES.FETCH_ERROR);
+    generalError.status = 500; // Error genérico de servidor
+    throw generalError;
+  }
 };

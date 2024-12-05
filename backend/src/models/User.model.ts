@@ -1,12 +1,8 @@
 import { Model, DataTypes } from "sequelize";
 import sequelize from "../config/database";
-
-function generateShortID(): string {
-  return (
-    Date.now().toString(36).substring(0, 6) +
-    Math.random().toString(36).substring(2, 6)
-  ).substring(0, 10);
-}
+import { generateShortID } from "../utils/generateShortID";
+import { Membership } from "./enum/enum";
+import { ProductModel } from "./Product.model";
 
 class UserModel extends Model {
   public id!: string;
@@ -14,7 +10,11 @@ class UserModel extends Model {
   public email!: string;
   public password!: string;
   public role!: string;
+  public about!: string;
+  public imageProfile!: string
+  public membership!: Membership | null
   public isValid!: boolean;
+  public products!: ProductModel[]
 }
 
 UserModel.init(
@@ -37,10 +37,30 @@ UserModel.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    about: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     role: {
       type: DataTypes.STRING,
       allowNull: false,
       defaultValue: "user",
+    },
+    products: {
+      type: DataTypes.ARRAY(DataTypes.STRING(10)),
+      allowNull: true,
+    },
+    imageProfile: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    membership: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      defaultValue: null,
+      validate: {
+        isIn: [Object.values(Membership) || null],
+      },
     },
     isValid: {
       type: DataTypes.BOOLEAN,

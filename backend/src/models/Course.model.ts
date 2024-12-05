@@ -1,17 +1,13 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../config/database';
 import { ProductModel } from './Product.model';
-import { Competence, Platform, Sector, Tag } from './enum/enum';
-
-function generateShortID(): string {
-  return (
-    Date.now().toString(36).substring(0, 6) +
-    Math.random().toString(36).substring(2, 6)
-  ).substring(0, 10);
-}
+import { Competence, Language, Tool } from './enum/enum';
+import { generateShortID } from '../utils/generateShortID';
 
 class CourseModel extends ProductModel {
   public competence!: Competence;
+  public tools!: Tool[]
+  public languages!: Language[]
 }
 
 CourseModel.init(
@@ -25,28 +21,22 @@ CourseModel.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    detail: {
-      type: DataTypes.STRING,
+    description: {
+      type: DataTypes.TEXT,
       allowNull: false,
     },
     aboutLearn: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT,
       allowNull: true,
       field: 'about_learn',
     },
     competence: {
       type: DataTypes.STRING,
       allowNull: true,
-      validate: {
-        isIn: [Object.values(Competence)],
-      },
     },
     platform: {
       type: DataTypes.STRING,
       allowNull: false,
-      validate: {
-        isIn: [Object.values(Platform)],
-      },
     },
     imageMain: {
       type: DataTypes.STRING,
@@ -55,16 +45,18 @@ CourseModel.init(
     sector: {
       type: DataTypes.STRING,
       allowNull: false,
-      validate: {
-        isIn: [Object.values(Sector)],
-      },
     },
     tags: {
       type: DataTypes.ARRAY(DataTypes.STRING),
       allowNull: true,
-      validate: {
-        isIn: [Object.values(Tag)],
-      },
+    },
+    tools: {
+      type: DataTypes.ARRAY(DataTypes.STRING),
+      allowNull: true,
+    },
+    languages: {
+      type: DataTypes.ARRAY(DataTypes.STRING),
+      allowNull: true
     },
     price: {
       type: DataTypes.DOUBLE,

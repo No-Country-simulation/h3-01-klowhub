@@ -9,7 +9,9 @@ export {
   validateFetchCourse,
 } from "./validateCourseMdw";
 export {
-  deactivateUserValidator,
-  getOneUserValidator,
-  updateUserValidator
+  changeMembershipValidator,
+  idByParameterValidator,
+  updateUserValidator,
 } from "./validateUser";
+export { validateUserPro, validateUserProUpdate } from "./validateUserPro";
+export { uploadImageMdw } from "./multerMdw";

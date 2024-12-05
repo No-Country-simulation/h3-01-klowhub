@@ -1,7 +1,8 @@
 export enum Tag {
-    TAG1 = "Tag1",
-    TAG2 = "Tag2",
-    TAG3 = "Tag3",
+    LOWCODE = "LowCode",
+    NOCODE = "NoCode",
+    COURSE = "Course",
+    APPLICATION = "Application"
   }
   
   export enum Platform {
@@ -75,7 +76,7 @@ export enum Tag {
   }
 
   export enum Membership {
-    BASICO = "Básico",
+    BASICO = "Básica",
     PROFESIONAL = "Profesional",
     PREMIUM = "Premium"
   }
@@ -84,4 +85,17 @@ export enum Tag {
     CRIPTOMONEDAS = "Criptomonedas",
     PAYPAL = "Paypal",
     STRIPE = "Stripe"
+  }
+
+  export enum Language {
+    ESPAÑOL = "Español",
+    INGLES = "Inglés",
+    ALEMAN = "Alemán",
+    PORTUGUES = "Portugués",
+  }
+
+  export enum Expertise {
+    JUNIOR = "Junior",
+    SEMISENIOR = "Semi senior",
+    SENIOR = "Senior",
   }
