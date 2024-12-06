@@ -11,10 +11,11 @@ class UserModel extends Model {
   public password!: string;
   public role!: string;
   public about!: string;
-  public imageProfile!: string
-  public membership!: Membership | null
+  public imageProfile!: string;
+  public membership!: Membership | null;
   public isValid!: boolean;
-  public products!: ProductModel[]
+  public products!: ProductModel[];
+  public googleId!: string
 }
 
 UserModel.init(
@@ -35,7 +36,7 @@ UserModel.init(
     },
     password: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     about: {
       type: DataTypes.STRING,
@@ -67,6 +68,11 @@ UserModel.init(
       defaultValue: true,
       field: "is_valid",
     },
+    googleId: {
+      type: DataTypes.STRING,
+      allowNull: true, // Permitir nulo inicialmente
+      unique: true, // Evitar duplicados
+    }
   },
   {
     sequelize,

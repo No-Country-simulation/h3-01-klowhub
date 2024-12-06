@@ -7,7 +7,7 @@ import sequelize from "./config/database";
 const PORT = process.env.PORT || 3000;
 
 sequelize
-  .sync()
+  .sync({force: true})
   .then(() => {
     console.log("Database connected");
     app.listen(PORT, () => {
